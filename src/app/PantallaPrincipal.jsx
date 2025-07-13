@@ -9,29 +9,35 @@ export default function PantallaPrincipal() {
   const navigate = useNavigate();
 
   const cerrarSesion = async () => {
-    await signOut(auth);
-    navigate("/login");
+    try {
+      await signOut(auth);
+      navigate("/login");
+    } catch (error) {
+      alert("Error al cerrar sesión: " + error.message);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-6">
-      <div className="bg-gray-800 p-6 rounded-xl shadow-lg w-full max-w-2xl">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-3xl font-bold text-emerald-400">🏋️ Energym</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white flex flex-col items-center justify-center p-6">
+      <div className="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-3xl">
+        <header className="flex justify-between items-center mb-6">
+          <h1 className="text-4xl font-extrabold text-emerald-400 tracking-wide select-none">
+            🏋️ Energym
+          </h1>
           <button
             onClick={cerrarSesion}
-            className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm font-semibold"
+            className="bg-red-600 hover:bg-red-700 transition-colors duration-300 px-5 py-2 rounded-full text-sm font-semibold shadow-md active:scale-95"
           >
             Cerrar sesión
           </button>
-        </div>
+        </header>
 
-        <p className="text-gray-300 mb-6 text-sm">
+        <p className="text-gray-300 mb-8 text-base sm:text-lg">
           Bienvenido/a a tu panel de entrenamiento. Agregá rutinas y registrá tu progreso.
         </p>
 
         <RutinaForm />
-        <div className="my-6 border-t border-gray-600"></div>
+        <hr className="my-10 border-gray-600" />
         <ProgresoForm />
       </div>
     </div>
