@@ -3,6 +3,7 @@ import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../firebase";
 import google from "../assets/google.png";
 import { useNavigate } from "react-router-dom";
+import bgImage from "../assets/gym-bg.png"; // tu imagen de fondo
 
 export default function LoginGoogle() {
   const [loading, setLoading] = useState(false);
@@ -14,7 +15,7 @@ export default function LoginGoogle() {
     setError("");
     try {
       await signInWithPopup(auth, googleProvider);
-      navigate("/"); // Redirige a la pantalla principal
+      navigate("/");
     } catch (err) {
       console.error(err);
       setError("Error al iniciar sesión. Intenta de nuevo.");
@@ -23,8 +24,13 @@ export default function LoginGoogle() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-800 via-blue-600 to-blue-400 flex flex-col justify-center items-center px-6">
-      <div className="bg-gray-900 rounded-3xl shadow-2xl p-10 max-w-md w-full text-center border border-gray-700">
+    <div
+      className="min-h-screen flex flex-col justify-center items-center px-6 bg-cover bg-center"
+      style={{
+        backgroundImage: `url(${bgImage})`,
+      }}
+    >
+      <div className="bg-black bg-opacity-70 rounded-3xl shadow-2xl p-10 max-w-md w-full text-center">
         <h1 className="text-5xl font-extrabold mb-6 text-emerald-400 tracking-wide">
           Energym
         </h1>
