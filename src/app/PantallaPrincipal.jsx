@@ -4,7 +4,6 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import ListaRutinas from "./ListaRutinas";
 
-
 export default function PantallaPrincipal() {
   const navigate = useNavigate();
 
@@ -33,8 +32,7 @@ export default function PantallaPrincipal() {
           ➕ Crear nueva rutina
         </button>
 
-        {/* Aquí irá el componente de lista de rutinas con cards */}
-          <ListaRutinas />
+        <ListaRutinas />
         <p className="text-gray-400 text-sm">Aquí aparecerán tus rutinas guardadas...</p>
       </div>
     </div>
