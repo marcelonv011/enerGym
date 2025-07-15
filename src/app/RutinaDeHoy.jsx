@@ -1,6 +1,15 @@
 import React, { useEffect, useState, useContext } from "react";
 import { auth, db } from "../firebase";
-import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  setDoc,
+  deleteDoc,
+} from "firebase/firestore";
 import { CheckCircle, Circle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -32,12 +41,12 @@ export default function RutinaDeHoy() {
         if (snap.exists()) {
           setRutina({ id: snap.id, ...snap.data() });
 
-          // Cargar ejercicios completados
+          // Cargar ejercicios completados para hoy
           const compRef = collection(db, "users", uid, "rutinas", rutinaActivaId, "completados");
           const q = query(compRef, where("fecha", "==", fechaHoy));
           const compSnap = await getDocs(q);
           setCompletados({
-            [rutinaActivaId]: compSnap.docs.map(doc => doc.data().ejercicio),
+            [rutinaActivaId]: compSnap.docs.map((doc) => doc.data().ejercicio),
           });
         } else {
           setRutina(null);
@@ -61,29 +70,28 @@ export default function RutinaDeHoy() {
 
     const actual = completados[rutinaId] || [];
     const docId = `${fechaHoy}-${ejercicioNombre.replace(/\s+/g, "_")}`;
-
     const ref = doc(db, "users", uid, "rutinas", rutinaId, "completados", docId);
 
     try {
       if (actual.includes(ejercicioNombre)) {
+        // Desmarcar ejercicio: borrar doc
         await deleteDoc(ref);
-        setCompletados(prev => ({
+        setCompletados((prev) => ({
           ...prev,
-          [rutinaId]: prev[rutinaId].filter(e => e !== ejercicioNombre),
+          [rutinaId]: prev[rutinaId].filter((e) => e !== ejercicioNombre),
         }));
-
         toast.error(`❌ Ejercicio "${ejercicioNombre}" desmarcado`);
       } else {
+        // Marcar ejercicio: crear doc
         await setDoc(ref, {
           ejercicio: ejercicioNombre,
           fecha: fechaHoy,
           creada: new Date(),
         });
-        setCompletados(prev => ({
+        setCompletados((prev) => ({
           ...prev,
           [rutinaId]: [...(prev[rutinaId] || []), ejercicioNombre],
         }));
-
         toast.success(`✅ "${ejercicioNombre}" completado`);
       }
     } catch (err) {
@@ -92,21 +100,24 @@ export default function RutinaDeHoy() {
     }
   };
 
-  if (loading || loadingRutinaActiva) return <p className="text-gray-400">Cargando rutina activa...</p>;
+  if (loading || loadingRutinaActiva)
+    return <p className="text-gray-400">Cargando rutina activa...</p>;
 
-  if (!rutina) return (
-    <div className="bg-gray-800 p-6 rounded-xl mb-8 shadow-lg border border-gray-700">
-      <h2 className="text-2xl font-bold text-emerald-400 mb-3">📅 Rutinas de hoy</h2>
-      <p className="text-gray-400">No hay rutina activa seleccionada.</p>
-    </div>
-  );
+  if (!rutina)
+    return (
+      <div className="bg-gray-800 p-6 rounded-xl mb-8 shadow-lg border border-gray-700">
+        <h2 className="text-2xl font-bold text-emerald-400 mb-3">📅 Rutinas de hoy</h2>
+        <p className="text-gray-400">No hay rutina activa seleccionada.</p>
+      </div>
+    );
 
-  if (!rutina.dias?.[hoy]?.length) return (
-    <div className="bg-gray-800 p-6 rounded-xl mb-8 shadow-lg border border-gray-700">
-      <h2 className="text-2xl font-bold text-emerald-400 mb-3">📅 Rutinas de hoy</h2>
-      <p className="text-gray-400">No hay ejercicios asignados para hoy en la rutina activa.</p>
-    </div>
-  );
+  if (!rutina.dias?.[hoy]?.length)
+    return (
+      <div className="bg-gray-800 p-6 rounded-xl mb-8 shadow-lg border border-gray-700">
+        <h2 className="text-2xl font-bold text-emerald-400 mb-3">📅 Rutinas de hoy</h2>
+        <p className="text-gray-400">No hay ejercicios asignados para hoy en la rutina activa.</p>
+      </div>
+    );
 
   return (
     <div className="bg-gray-800 p-6 rounded-xl mb-8 shadow-lg border border-gray-700">
