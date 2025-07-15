@@ -10,6 +10,8 @@ import {
   where,
 } from "firebase/firestore";
 import { CheckCircle, Circle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 export default function RutinaDeHoy() {
   const [rutinasHoy, setRutinasHoy] = useState([]);
@@ -75,6 +77,8 @@ export default function RutinaDeHoy() {
         ...prev,
         [rutinaId]: prev[rutinaId].filter(e => e !== ejercicioNombre),
       }));
+
+      toast.error(`❌ Ejercicio "${ejercicioNombre}" desmarcado`);
     } else {
       await setDoc(ref, {
         ejercicio: ejercicioNombre,
@@ -85,6 +89,8 @@ export default function RutinaDeHoy() {
         ...prev,
         [rutinaId]: [...(prev[rutinaId] || []), ejercicioNombre],
       }));
+
+      toast.success(`✅ "${ejercicioNombre}" completado`);
     }
   };
 
@@ -111,9 +117,13 @@ export default function RutinaDeHoy() {
               const completado = completados[rutina.id]?.includes(ejercicio.nombre);
 
               return (
-                <button
+                <motion.button
                   key={i}
                   onClick={() => toggleEjercicio(rutina.id, ejercicio.nombre)}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   className={`flex items-center justify-between px-4 py-3 rounded-xl border border-gray-700 transition-all ${
                     completado
                       ? "bg-emerald-600/20 hover:bg-emerald-600/30"
@@ -128,12 +138,30 @@ export default function RutinaDeHoy() {
                     {ejercicio.nombre}
                   </span>
 
-                  {completado ? (
-                    <CheckCircle size={24} className="text-emerald-400 transition-all" />
-                  ) : (
-                    <Circle size={24} className="text-gray-400 transition-all" />
-                  )}
-                </button>
+                  <AnimatePresence mode="wait" initial={false}>
+                    {completado ? (
+                      <motion.div
+                        key="check"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                      >
+                        <CheckCircle size={24} className="text-emerald-400" />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="circle"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                      >
+                        <Circle size={24} className="text-gray-400" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.button>
               );
             })}
           </div>
