@@ -1,14 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { auth, db } from "../firebase";
 import { collection, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { RutinaActivaContext } from "./RutinaActivaContext";
 
 export default function ListaRutinas() {
   const [rutinas, setRutinas] = useState([]);
   const [modalEliminar, setModalEliminar] = useState({ abierto: false, idRutina: null });
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  const { fetchRutinaActiva, rutinaActivaId } = useContext(RutinaActivaContext);
 
   const obtenerRutinas = async () => {
     const uid = auth.currentUser?.uid;
@@ -81,6 +84,10 @@ export default function ListaRutinas() {
 
       // Refrescar la lista para mostrar cambios
       await obtenerRutinas();
+
+      // Actualizar la rutina activa en el contexto para que otros componentes reaccionen
+      await fetchRutinaActiva(uid);
+
     } catch (err) {
       console.error("Error al activar rutina:", err);
       alert("❌ No se pudo activar la rutina");

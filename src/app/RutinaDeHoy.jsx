@@ -1,67 +1,59 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { auth, db } from "../firebase";
-import {
-  collection,
-  getDocs,
-  doc,
-  setDoc,
-  deleteDoc,
-  query,
-  where,
-} from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { CheckCircle, Circle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { RutinaActivaContext } from "./RutinaActivaContext";
 
 export default function RutinaDeHoy() {
-  const [rutinasHoy, setRutinasHoy] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { rutinaActivaId, loading: loadingRutinaActiva } = useContext(RutinaActivaContext);
+  const [rutina, setRutina] = useState(null);
   const [completados, setCompletados] = useState({});
+  const [loading, setLoading] = useState(true);
 
   const hoy = new Date().toLocaleDateString("es-AR", { weekday: "long" }).toLowerCase();
   const fechaHoy = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
-    const fetchRutinasHoy = async () => {
+    const fetchRutina = async () => {
+      if (!rutinaActivaId) {
+        setRutina(null);
+        setLoading(false);
+        return;
+      }
       const uid = auth.currentUser?.uid;
       if (!uid) return;
 
+      setLoading(true);
       try {
-        const rutinasRef = collection(db, "users", uid, "rutinas");
-        const snapshot = await getDocs(rutinasRef);
+        const ref = doc(db, "users", uid, "rutinas", rutinaActivaId);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          setRutina({ id: snap.id, ...snap.data() });
 
-        const todasRutinas = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        // FILTRAR sólo la rutina activa con ejercicios para hoy
-        const rutinasActivas = todasRutinas.filter(
-          (rutina) => rutina.activa && rutina.dias?.[hoy]?.length > 0
-        );
-
-        setRutinasHoy(rutinasActivas);
-
-        // Cargar ejercicios completados para la rutina activa y fecha de hoy
-        const completadosTemp = {};
-        for (const rutina of rutinasActivas) {
-          const compRef = collection(db, "users", uid, "rutinas", rutina.id, "completados");
+          // Cargar ejercicios completados
+          const compRef = collection(db, "users", uid, "rutinas", rutinaActivaId, "completados");
           const q = query(compRef, where("fecha", "==", fechaHoy));
           const compSnap = await getDocs(q);
-          completadosTemp[rutina.id] = compSnap.docs.map(doc => doc.data().ejercicio);
+          setCompletados({
+            [rutinaActivaId]: compSnap.docs.map(doc => doc.data().ejercicio),
+          });
+        } else {
+          setRutina(null);
         }
-
-        setCompletados(completadosTemp);
       } catch (err) {
-        console.error("Error al obtener datos:", err);
-        setRutinasHoy([]);
+        console.error("Error al obtener rutina:", err);
+        setRutina(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRutinasHoy();
-  }, [hoy]);
+    if (!loadingRutinaActiva) {
+      fetchRutina();
+    }
+  }, [rutinaActivaId, loadingRutinaActiva]);
 
   const toggleEjercicio = async (rutinaId, ejercicioNombre) => {
     const uid = auth.currentUser?.uid;
@@ -100,79 +92,79 @@ export default function RutinaDeHoy() {
     }
   };
 
-  if (loading) return <p className="text-gray-400">Cargando rutinas de hoy...</p>;
+  if (loading || loadingRutinaActiva) return <p className="text-gray-400">Cargando rutina activa...</p>;
 
-  if (rutinasHoy.length === 0)
-    return (
-      <div className="bg-gray-800 p-6 rounded-xl mb-8 shadow-lg border border-gray-700">
-        <h2 className="text-2xl font-bold text-emerald-400 mb-3">📅 Rutinas de hoy</h2>
-        <p className="text-gray-400">No hay ejercicios asignados para hoy.</p>
-      </div>
-    );
+  if (!rutina) return (
+    <div className="bg-gray-800 p-6 rounded-xl mb-8 shadow-lg border border-gray-700">
+      <h2 className="text-2xl font-bold text-emerald-400 mb-3">📅 Rutinas de hoy</h2>
+      <p className="text-gray-400">No hay rutina activa seleccionada.</p>
+    </div>
+  );
+
+  if (!rutina.dias?.[hoy]?.length) return (
+    <div className="bg-gray-800 p-6 rounded-xl mb-8 shadow-lg border border-gray-700">
+      <h2 className="text-2xl font-bold text-emerald-400 mb-3">📅 Rutinas de hoy</h2>
+      <p className="text-gray-400">No hay ejercicios asignados para hoy en la rutina activa.</p>
+    </div>
+  );
 
   return (
     <div className="bg-gray-800 p-6 rounded-xl mb-8 shadow-lg border border-gray-700">
-      <h2 className="text-2xl font-bold text-emerald-400 mb-6">📅 Rutinas para hoy</h2>
+      <h2 className="text-2xl font-bold text-emerald-400 mb-6">📅 Rutina activa: {rutina.nombre}</h2>
 
-      {rutinasHoy.map(rutina => (
-        <div key={rutina.id} className="mb-8">
-          <h3 className="text-xl font-semibold text-emerald-300 mb-4">{rutina.nombre}</h3>
+      <div className="flex flex-col gap-3">
+        {rutina.dias[hoy].map((ejercicio, i) => {
+          const completado = completados[rutina.id]?.includes(ejercicio.nombre);
 
-          <div className="flex flex-col gap-3">
-            {rutina.dias[hoy].map((ejercicio, i) => {
-              const completado = completados[rutina.id]?.includes(ejercicio.nombre);
+          return (
+            <motion.button
+              key={i}
+              onClick={() => toggleEjercicio(rutina.id, ejercicio.nombre)}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className={`flex items-center justify-between px-4 py-3 rounded-xl border border-gray-700 transition-all ${
+                completado
+                  ? "bg-emerald-600/20 hover:bg-emerald-600/30"
+                  : "bg-gray-700 hover:bg-gray-600"
+              }`}
+            >
+              <span
+                className={`text-lg font-medium transition-all ${
+                  completado ? "line-through text-gray-400" : "text-white"
+                }`}
+              >
+                {ejercicio.nombre}
+              </span>
 
-              return (
-                <motion.button
-                  key={i}
-                  onClick={() => toggleEjercicio(rutina.id, ejercicio.nombre)}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl border border-gray-700 transition-all ${
-                    completado
-                      ? "bg-emerald-600/20 hover:bg-emerald-600/30"
-                      : "bg-gray-700 hover:bg-gray-600"
-                  }`}
-                >
-                  <span
-                    className={`text-lg font-medium transition-all ${
-                      completado ? "line-through text-gray-400" : "text-white"
-                    }`}
+              <AnimatePresence mode="wait" initial={false}>
+                {completado ? (
+                  <motion.div
+                    key="check"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 15 }}
                   >
-                    {ejercicio.nombre}
-                  </span>
-
-                  <AnimatePresence mode="wait" initial={false}>
-                    {completado ? (
-                      <motion.div
-                        key="check"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        exit={{ scale: 0 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                      >
-                        <CheckCircle size={24} className="text-emerald-400" />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="circle"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        exit={{ scale: 0 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                      >
-                        <Circle size={24} className="text-gray-400" />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+                    <CheckCircle size={24} className="text-emerald-400" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="circle"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                  >
+                    <Circle size={24} className="text-gray-400" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          );
+        })}
+      </div>
     </div>
   );
 }
