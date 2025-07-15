@@ -35,15 +35,16 @@ export default function RutinaDeHoy() {
           ...doc.data(),
         }));
 
-        const rutinasConEjerciciosHoy = todasRutinas.filter(
-          rutina => rutina.dias?.[hoy]?.length > 0
+        // FILTRAR sólo la rutina activa con ejercicios para hoy
+        const rutinasActivas = todasRutinas.filter(
+          (rutina) => rutina.activa && rutina.dias?.[hoy]?.length > 0
         );
 
-        setRutinasHoy(rutinasConEjerciciosHoy);
+        setRutinasHoy(rutinasActivas);
 
-        // Cargar completados
+        // Cargar ejercicios completados para la rutina activa y fecha de hoy
         const completadosTemp = {};
-        for (const rutina of rutinasConEjerciciosHoy) {
+        for (const rutina of rutinasActivas) {
           const compRef = collection(db, "users", uid, "rutinas", rutina.id, "completados");
           const q = query(compRef, where("fecha", "==", fechaHoy));
           const compSnap = await getDocs(q);
@@ -71,26 +72,31 @@ export default function RutinaDeHoy() {
 
     const ref = doc(db, "users", uid, "rutinas", rutinaId, "completados", docId);
 
-    if (actual.includes(ejercicioNombre)) {
-      await deleteDoc(ref);
-      setCompletados(prev => ({
-        ...prev,
-        [rutinaId]: prev[rutinaId].filter(e => e !== ejercicioNombre),
-      }));
+    try {
+      if (actual.includes(ejercicioNombre)) {
+        await deleteDoc(ref);
+        setCompletados(prev => ({
+          ...prev,
+          [rutinaId]: prev[rutinaId].filter(e => e !== ejercicioNombre),
+        }));
 
-      toast.error(`❌ Ejercicio "${ejercicioNombre}" desmarcado`);
-    } else {
-      await setDoc(ref, {
-        ejercicio: ejercicioNombre,
-        fecha: fechaHoy,
-        creada: new Date(),
-      });
-      setCompletados(prev => ({
-        ...prev,
-        [rutinaId]: [...(prev[rutinaId] || []), ejercicioNombre],
-      }));
+        toast.error(`❌ Ejercicio "${ejercicioNombre}" desmarcado`);
+      } else {
+        await setDoc(ref, {
+          ejercicio: ejercicioNombre,
+          fecha: fechaHoy,
+          creada: new Date(),
+        });
+        setCompletados(prev => ({
+          ...prev,
+          [rutinaId]: [...(prev[rutinaId] || []), ejercicioNombre],
+        }));
 
-      toast.success(`✅ "${ejercicioNombre}" completado`);
+        toast.success(`✅ "${ejercicioNombre}" completado`);
+      }
+    } catch (err) {
+      console.error("Error al actualizar ejercicio completado:", err);
+      toast.error("❌ Error al actualizar ejercicio");
     }
   };
 
