@@ -4,6 +4,19 @@ import { db, auth } from "../firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { PlayCircle, Edit2, Trash2 } from "lucide-react";
 
+function esUrlValida(url) {
+  if (!url) return true; // vacío permitido (opcional)
+  try {
+    const parsed = new URL(url);
+    return (
+      (parsed.protocol === "http:" || parsed.protocol === "https:") &&
+      (parsed.hostname.includes("youtube.com") || parsed.hostname.includes("youtu.be"))
+    );
+  } catch {
+    return false;
+  }
+}
+
 export default function EditarRutina() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -30,7 +43,6 @@ export default function EditarRutina() {
 
   const [videoModal, setVideoModal] = useState({ abierto: false, url: "" });
 
-  // Estado para control modal eliminación
   const [modalEliminar, setModalEliminar] = useState({
     abierto: false,
     dia: null,
@@ -75,6 +87,11 @@ export default function EditarRutina() {
   const agregarEjercicio = () => {
     if (!nuevoEjercicio.trim()) return;
 
+    if (!esUrlValida(videoURL.trim())) {
+      setMensaje("❌ URL de video inválida.");
+      return;
+    }
+
     setDias((prev) => ({
       ...prev,
       [diaSeleccionado]: [
@@ -88,14 +105,13 @@ export default function EditarRutina() {
 
     setNuevoEjercicio("");
     setVideoURL("");
+    // NO limpiar mensaje acá para que el usuario vea errores si los hubo
   };
 
-  // Función que abre modal para confirmar eliminación
   const solicitarEliminarEjercicio = (dia, index) => {
     setModalEliminar({ abierto: true, dia, index });
   };
 
-  // Confirmar eliminación
   const confirmarEliminarEjercicio = () => {
     const { dia, index } = modalEliminar;
     if (dia === null || index === null) return;
@@ -108,7 +124,6 @@ export default function EditarRutina() {
     setModalEliminar({ abierto: false, dia: null, index: null });
   };
 
-  // Cancelar eliminación
   const cancelarEliminar = () => {
     setModalEliminar({ abierto: false, dia: null, index: null });
   };
@@ -117,24 +132,30 @@ export default function EditarRutina() {
     setEditando({ dia, index });
     setEditNombre(ejercicio.nombre);
     setEditVideo(ejercicio.videoURL || "");
+    setMensaje("");
   };
 
   const guardarEdicion = () => {
-    const { dia, index } = editando;
     if (editNombre.trim() === "") return;
 
+    if (!esUrlValida(editVideo.trim())) {
+      setMensaje("❌ URL de video inválida.");
+      return;
+    }
+
     setDias((prev) => {
-      const nuevos = [...prev[dia]];
-      nuevos[index] = {
+      const nuevos = [...prev[editando.dia]];
+      nuevos[editando.index] = {
         nombre: editNombre,
         videoURL: editVideo.trim() || null,
       };
-      return { ...prev, [dia]: nuevos };
+      return { ...prev, [editando.dia]: nuevos };
     });
 
     setEditando({ dia: null, index: null });
     setEditNombre("");
     setEditVideo("");
+    // NO limpiar mensaje acá para que el usuario vea errores si los hubo
   };
 
   const abrirVideo = (url) => {
@@ -152,6 +173,16 @@ export default function EditarRutina() {
     if (!nombre.trim()) {
       setMensaje("❌ Debes poner un nombre a la rutina.");
       return;
+    }
+
+    // Validar que todos los videos tengan URLs válidas
+    for (const dia of ordenDias) {
+      for (const ejercicio of dias[dia]) {
+        if (!esUrlValida(ejercicio.videoURL)) {
+          setMensaje(`❌ URL inválida en ejercicio "${ejercicio.nombre}" del día ${dia}`);
+          return;
+        }
+      }
     }
 
     const uid = auth.currentUser?.uid;
@@ -173,6 +204,13 @@ export default function EditarRutina() {
       setMensaje("❌ Error al guardar cambios.");
     }
   };
+
+  // Limpia el mensaje después de 5 segundos para mejor UX
+  useEffect(() => {
+    if (!mensaje) return;
+    const timer = setTimeout(() => setMensaje(""), 5000);
+    return () => clearTimeout(timer);
+  }, [mensaje]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white px-4 py-8 flex flex-col items-center">
@@ -314,7 +352,7 @@ export default function EditarRutina() {
         </div>
 
         {mensaje && (
-          <p className="text-sm text-red-400 mt-8 text-center">{mensaje}</p>
+          <p className="text-sm text-red-400 mt-8 text-center select-none">{mensaje}</p>
         )}
 
         <button
