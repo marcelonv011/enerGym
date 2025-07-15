@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import ListaRutinas from "./ListaRutinas";
+import RutinaDeHoy from "./RutinaDeHoy";
 
 export default function PantallaPrincipal() {
   const navigate = useNavigate();
@@ -27,6 +28,8 @@ export default function PantallaPrincipal() {
             🔒 Cerrar sesión
           </button>
         </div>
+
+        <RutinaDeHoy />
 
         <div className="flex justify-center mb-8">
           <button
