@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db, auth } from "../firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { PlayCircle, Edit2, Trash2 } from "lucide-react"; // Íconos modernos (lucide-react)
 
 export default function EditarRutina() {
   const { id } = useParams();
@@ -105,12 +106,6 @@ export default function EditarRutina() {
     setEditVideo("");
   };
 
-  const cancelarEdicion = () => {
-    setEditando({ dia: null, index: null });
-    setEditNombre("");
-    setEditVideo("");
-  };
-
   const abrirVideo = (url) => {
     const embedUrl = url.includes("youtube.com/watch")
       ? url.replace("watch?v=", "embed/")
@@ -149,35 +144,41 @@ export default function EditarRutina() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-gray-900 via-gray-800 to-gray-900 text-white p-6">
-      <div className="bg-gray-850 p-8 rounded-3xl shadow-2xl max-w-xl mx-auto">
-        <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 mb-6 text-emerald-400 hover:text-emerald-600 transition font-semibold"
-            aria-label="Volver atrás"
-        >
-        ← Volver
-        </button>
-        <h1 className="text-3xl font-extrabold mb-6 text-emerald-400 tracking-wide drop-shadow-lg">
-          ✏️ Editar Rutina
-        </h1>
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white px-4 py-8 flex flex-col items-center">
+      <div className="w-full max-w-5xl bg-gray-900 bg-opacity-80 backdrop-blur-md rounded-3xl p-6 sm:p-10 shadow-2xl border border-gray-700">
 
+        {/* Header */}
+        <div className="mb-8 flex flex-col items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-emerald-400 hover:text-emerald-500 transition font-semibold self-start"
+          >
+            ← Volver
+          </button>
+
+          <h1 className="text-4xl font-extrabold text-emerald-400 tracking-tight text-center">
+            ✏️ Editar rutina
+          </h1>
+        </div>
+
+        {/* Input nombre rutina */}
         <input
           type="text"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Nombre de la rutina"
-          className="w-full p-4 rounded-lg bg-gray-700 border border-gray-600 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500 placeholder-gray-400 text-white mb-6 transition"
+          className="w-full p-4 rounded-xl bg-gray-800 text-white mb-6 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
 
-        <div className="flex flex-col gap-4 mb-6">
+        {/* Form agregar ejercicio */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <select
             value={diaSeleccionado}
             onChange={(e) => setDiaSeleccionado(e.target.value)}
-            className="p-3 rounded-lg bg-gray-700 border border-gray-600 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500 text-white transition"
+            className="p-4 rounded-xl bg-gray-800 text-white w-full sm:w-1/4 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             {ordenDias.map((d) => (
-              <option key={d} value={d} className="capitalize">
+              <option key={d} value={d}>
                 {d}
               </option>
             ))}
@@ -187,8 +188,8 @@ export default function EditarRutina() {
             type="text"
             value={nuevoEjercicio}
             onChange={(e) => setNuevoEjercicio(e.target.value)}
-            placeholder="Ejercicio (Ej: Sentadillas)"
-            className="p-3 rounded-lg bg-gray-700 border border-gray-600 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500 placeholder-gray-400 text-white transition"
+            placeholder="Ejercicio (Ej: Sentadillas 4x12)"
+            className="p-4 rounded-xl bg-gray-800 text-white w-full sm:w-2/4 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
 
           <input
@@ -196,124 +197,103 @@ export default function EditarRutina() {
             value={videoURL}
             onChange={(e) => setVideoURL(e.target.value)}
             placeholder="Link YouTube (opcional)"
-            className="p-3 rounded-lg bg-gray-700 border border-gray-600 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500 placeholder-gray-400 text-white transition"
+            className="p-4 rounded-xl bg-gray-800 text-white w-full sm:w-1/4 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
 
         <button
           onClick={agregarEjercicio}
-          className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 transition text-white py-3 rounded-xl font-semibold w-full shadow-md shadow-emerald-600/50 mb-8"
+          className="w-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 transition-all py-3 rounded-full text-lg font-semibold shadow-lg hover:shadow-emerald-700/50 active:scale-95 mb-10"
         >
-          ➕ Agregar ejercicio
+          ➕ Agregar ejercicio al día
         </button>
 
-        {ordenDias.map((dia) => (
-          <div key={dia} className="mb-8">
-            <h3 className="text-2xl font-bold text-emerald-300 capitalize mb-4 tracking-wide">
-              {dia}
-            </h3>
+        {/* Lista de ejercicios por día */}
+        <div className="space-y-6">
+          {ordenDias.map((dia) => (
+            <div key={dia}>
+              <h3 className="text-xl font-bold text-emerald-300 capitalize mb-2">{dia}</h3>
+              {dias[dia].length === 0 ? (
+                <p className="text-gray-500 text-sm ml-2">Sin ejercicios.</p>
+              ) : (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {dias[dia].map((e, i) => (
+                    <div key={i} className="bg-gray-800 rounded-xl p-4 border border-gray-700 shadow-md flex flex-col gap-3">
+                      {editando.dia === dia && editando.index === i ? (
+                        <>
+                          <input
+                            type="text"
+                            value={editNombre}
+                            onChange={(ev) => setEditNombre(ev.target.value)}
+                            className="p-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                          <input
+                            type="text"
+                            value={editVideo}
+                            onChange={(ev) => setEditVideo(ev.target.value)}
+                            className="p-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                          <div className="flex justify-end gap-2 mt-2">
+                            <button onClick={guardarEdicion} className="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-full font-semibold text-white transition">💾</button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-semibold">{e.nombre}</p>
+                          <div className="flex justify-end gap-2 mt-2">
+                            {e.videoURL && (
+                              <button
+                                onClick={() => abrirVideo(e.videoURL)}
+                                className="p-2 rounded-full bg-gray-700 hover:bg-blue-500 transition"
+                              >
+                                <PlayCircle size={20} className="text-blue-400" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => iniciarEdicion(dia, i, e)}
+                              className="p-2 rounded-full bg-gray-700 hover:bg-yellow-500 transition"
+                            >
+                              <Edit2 size={20} className="text-yellow-400" />
+                            </button>
+                            <button
+                              onClick={() => eliminarEjercicio(dia, i)}
+                              className="p-2 rounded-full bg-gray-700 hover:bg-red-500 transition"
+                            >
+                              <Trash2 size={20} className="text-red-400" />
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
 
-            {dias[dia].length === 0 ? (
-              <p className="text-gray-400 italic">Sin ejercicios.</p>
-            ) : (
-              <ul className="space-y-3">
-                {dias[dia].map((e, i) => (
-                  <li
-                    key={i}
-                    className="bg-gray-700 rounded-2xl p-5 flex flex-col shadow-lg shadow-black/50"
-                  >
-                    {editando.dia === dia && editando.index === i ? (
-                      <div className="flex flex-col gap-3">
-                        <input
-                          type="text"
-                          value={editNombre}
-                          onChange={(ev) => setEditNombre(ev.target.value)}
-                          className="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500 placeholder-gray-300 text-white transition"
-                          placeholder="Nombre del ejercicio"
-                        />
-                        <input
-                          type="text"
-                          value={editVideo}
-                          onChange={(ev) => setEditVideo(ev.target.value)}
-                          className="p-3 rounded-lg bg-gray-600 border border-gray-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500 placeholder-gray-300 text-white transition"
-                          placeholder="Link YouTube (opcional)"
-                        />
-                        <div className="flex gap-4 mt-2 justify-end">
-                          <button
-                            onClick={guardarEdicion}
-                            className="bg-emerald-500 hover:bg-emerald-600 transition px-5 py-2 rounded-full font-semibold shadow-md shadow-emerald-600/60"
-                          >
-                            Guardar
-                          </button>
-                          <button
-                            onClick={cancelarEdicion}
-                            className="bg-gray-500 hover:bg-gray-600 transition px-5 py-2 rounded-full font-semibold"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col gap-2">
-                        <span className="font-semibold text-lg">{e.nombre}</span>
-                        {e.videoURL && (
-                          <button
-                            onClick={() => abrirVideo(e.videoURL)}
-                            className="text-emerald-400 hover:text-emerald-300 underline text-sm self-start transition"
-                            aria-label={`Ver video de ${e.nombre}`}
-                          >
-                            📹 Ver video
-                          </button>
-                        )}
-                        <div className="flex gap-3 mt-3">
-                          <button
-                            onClick={() => iniciarEdicion(dia, i, e)}
-                            className="bg-blue-600 hover:bg-blue-700 transition px-4 py-1 rounded-full text-sm font-semibold shadow-sm shadow-blue-700/50"
-                          >
-                            ✏️ Editar
-                          </button>
-                          <button
-                            onClick={() => eliminarEjercicio(dia, i)}
-                            className="bg-red-600 hover:bg-red-700 transition px-4 py-1 rounded-full text-sm font-semibold shadow-sm shadow-red-700/50"
-                          >
-                            🗑️ Eliminar
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
-
-        {mensaje && (
-          <p className="text-red-500 mt-4 font-medium text-center">{mensaje}</p>
-        )}
+        {mensaje && <p className="text-sm text-red-400 mt-8 text-center">{mensaje}</p>}
 
         <button
           onClick={guardarCambios}
-          className="mt-10 w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition py-4 rounded-3xl font-extrabold text-white shadow-lg shadow-blue-700/70"
+          className="w-full bg-blue-500 hover:bg-blue-600 transition-all text-white mt-10 py-4 rounded-full text-lg font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-700/50 active:scale-95"
         >
           💾 Guardar cambios
         </button>
       </div>
 
-      {/* Modal de video */}
       {videoModal.abierto && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 animate-fade-in"
           onClick={cerrarVideo}
         >
           <div
-            className="bg-gray-900 rounded-3xl max-w-3xl w-full aspect-video shadow-2xl relative"
+            className="bg-gray-900 rounded-3xl max-w-3xl w-full aspect-video shadow-2xl relative overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={cerrarVideo}
               className="absolute top-4 right-5 text-white text-3xl font-bold hover:text-emerald-400 transition"
-              aria-label="Cerrar modal de video"
             >
               ×
             </button>
@@ -322,7 +302,6 @@ export default function EditarRutina() {
               title="Video ejercicio"
               className="w-full h-full rounded-3xl"
               allowFullScreen
-              loading="lazy"
             ></iframe>
           </div>
         </div>
