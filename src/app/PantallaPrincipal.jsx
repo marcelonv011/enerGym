@@ -13,27 +13,40 @@ export default function PantallaPrincipal() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white flex flex-col items-center justify-start p-6">
-      <div className="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-3xl mt-10">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-emerald-400">🏋️ Mis Rutinas</h1>
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white px-6 py-10 flex flex-col items-center">
+      {/* Contenedor principal */}
+      <div className="w-full max-w-5xl bg-gray-900 bg-opacity-80 backdrop-blur-md rounded-3xl p-10 shadow-2xl border border-gray-700">
+        
+        {/* Header superior */}
+        <div className="flex justify-between items-center mb-10">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-emerald-400 drop-shadow tracking-tight select-none">
+            🏋️ Energym Rutinas
+          </h1>
           <button
             onClick={cerrarSesion}
-            className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm font-semibold"
+            className="bg-red-600 hover:bg-red-700 transition-all px-5 py-2 rounded-full text-sm font-bold shadow-md active:scale-95"
           >
-            Cerrar sesión
+            🔒 Cerrar sesión
           </button>
         </div>
 
-        <button
-          onClick={() => navigate("/crear-rutina")}
-          className="bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-5 rounded-lg font-semibold shadow-md mb-6"
-        >
-          ➕ Crear nueva rutina
-        </button>
+        {/* Botón crear rutina */}
+        <div className="flex justify-center mb-10">
+          <button
+            onClick={() => navigate("/crear-rutina")}
+            className="bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 transition-all duration-300 ease-in-out text-white py-4 px-8 rounded-full text-lg font-semibold shadow-lg shadow-emerald-600/30 hover:shadow-emerald-700/50"
+          >
+            ➕ Crear nueva rutina
+          </button>
+        </div>
 
+        {/* Lista de rutinas */}
         <ListaRutinas />
-        <p className="text-gray-400 text-sm">Aquí aparecerán tus rutinas guardadas...</p>
+
+        {/* Mensaje al final */}
+        <p className="mt-10 text-center text-sm text-gray-400 italic">
+          Aquí aparecerán todas tus rutinas personalizadas por día 📅
+        </p>
       </div>
     </div>
   );
