@@ -33,6 +33,9 @@ export default function DetalleRutina() {
   const [fechaFiltro, setFechaFiltro] = useState("");
   const [editandoId, setEditandoId] = useState(null);
 
+  // Estado nuevo para el modal eliminar progreso
+  const [modalEliminarProgreso, setModalEliminarProgreso] = useState({ abierto: false, id: null });
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -93,16 +96,27 @@ export default function DetalleRutina() {
     }
   };
 
-  const eliminarProgreso = async (id) => {
+  // En vez de eliminar directamente con confirm window, abrimos modal personalizado
+  const solicitarEliminarProgreso = (id) => {
+    setModalEliminarProgreso({ abierto: true, id });
+  };
+
+  const confirmarEliminarProgreso = async () => {
     const uid = auth.currentUser?.uid;
-    if (!uid || !window.confirm("¿Seguro que quieres eliminar este progreso?")) return;
+    if (!uid) return;
 
     try {
-      await deleteDoc(doc(db, "users", uid, "rutinas", rutinaId, "progreso", id));
+      await deleteDoc(doc(db, "users", uid, "rutinas", rutinaId, "progreso", modalEliminarProgreso.id));
       fetchProgresos(uid, fechaFiltro);
+      setModalEliminarProgreso({ abierto: false, id: null });
     } catch (err) {
       console.error("Error al eliminar progreso:", err);
+      setModalEliminarProgreso({ abierto: false, id: null });
     }
+  };
+
+  const cancelarEliminarProgreso = () => {
+    setModalEliminarProgreso({ abierto: false, id: null });
   };
 
   const guardarEdicion = async () => {
@@ -284,7 +298,7 @@ export default function DetalleRutina() {
                           Editar
                         </button>
                         <button
-                          onClick={() => eliminarProgreso(p.id)}
+                          onClick={() => solicitarEliminarProgreso(p.id)}
                           className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded"
                         >
                           Borrar
@@ -328,6 +342,38 @@ export default function DetalleRutina() {
           </div>
         </div>
       )}
+
+      {/* Modal confirmar eliminación progreso */}
+      {modalEliminarProgreso.abierto && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-80 flex flex-col justify-center items-center z-50 p-4"
+          onClick={cancelarEliminarProgreso}
+        >
+          <div
+            className="bg-gray-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-lg font-semibold text-red-400 mb-6">
+              ¿Eliminar este progreso?
+            </p>
+            <div className="flex justify-center gap-6">
+              <button
+                onClick={confirmarEliminarProgreso}
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full text-lg font-bold shadow-md active:scale-95"
+              >
+                Sí, eliminar
+              </button>
+              <button
+                onClick={cancelarEliminarProgreso}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-full text-lg font-bold shadow-md active:scale-95"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -30,18 +30,22 @@ export default function EditarRutina() {
 
   const [videoModal, setVideoModal] = useState({ abierto: false, url: "" });
 
-  const ordenDias = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
+  // Estado para control modal eliminación
+  const [modalEliminar, setModalEliminar] = useState({
+    abierto: false,
+    dia: null,
+    index: null,
+  });
 
-  // Función para validar URL (acepta cualquier URL válida)
-  function esUrlValida(url) {
-    if (!url) return true; // vacío = válido (opcional)
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
-  }
+  const ordenDias = [
+    "lunes",
+    "martes",
+    "miércoles",
+    "jueves",
+    "viernes",
+    "sábado",
+    "domingo",
+  ];
 
   useEffect(() => {
     const cargarRutina = async () => {
@@ -71,11 +75,6 @@ export default function EditarRutina() {
   const agregarEjercicio = () => {
     if (!nuevoEjercicio.trim()) return;
 
-    if (!esUrlValida(videoURL.trim())) {
-      setMensaje("❌ URL de video inválida.");
-      return;
-    }
-
     setDias((prev) => ({
       ...prev,
       [diaSeleccionado]: [
@@ -89,14 +88,29 @@ export default function EditarRutina() {
 
     setNuevoEjercicio("");
     setVideoURL("");
-    setMensaje("");
   };
 
-  const eliminarEjercicio = (dia, index) => {
+  // Función que abre modal para confirmar eliminación
+  const solicitarEliminarEjercicio = (dia, index) => {
+    setModalEliminar({ abierto: true, dia, index });
+  };
+
+  // Confirmar eliminación
+  const confirmarEliminarEjercicio = () => {
+    const { dia, index } = modalEliminar;
+    if (dia === null || index === null) return;
+
     setDias((prev) => ({
       ...prev,
       [dia]: prev[dia].filter((_, i) => i !== index),
     }));
+
+    setModalEliminar({ abierto: false, dia: null, index: null });
+  };
+
+  // Cancelar eliminación
+  const cancelarEliminar = () => {
+    setModalEliminar({ abierto: false, dia: null, index: null });
   };
 
   const iniciarEdicion = (dia, index, ejercicio) => {
@@ -108,11 +122,6 @@ export default function EditarRutina() {
   const guardarEdicion = () => {
     const { dia, index } = editando;
     if (editNombre.trim() === "") return;
-
-    if (!esUrlValida(editVideo.trim())) {
-      setMensaje("❌ URL de video inválida.");
-      return;
-    }
 
     setDias((prev) => {
       const nuevos = [...prev[dia]];
@@ -126,7 +135,6 @@ export default function EditarRutina() {
     setEditando({ dia: null, index: null });
     setEditNombre("");
     setEditVideo("");
-    setMensaje("");
   };
 
   const abrirVideo = (url) => {
@@ -241,7 +249,10 @@ export default function EditarRutina() {
               ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {dias[dia].map((e, i) => (
-                    <div key={i} className="bg-gray-800 rounded-xl p-4 border border-gray-700 shadow-md flex flex-col gap-3">
+                    <div
+                      key={i}
+                      className="bg-gray-800 rounded-xl p-4 border border-gray-700 shadow-md flex flex-col gap-3"
+                    >
                       {editando.dia === dia && editando.index === i ? (
                         <>
                           <input
@@ -286,7 +297,7 @@ export default function EditarRutina() {
                               <Edit2 size={20} className="text-yellow-400" />
                             </button>
                             <button
-                              onClick={() => eliminarEjercicio(dia, i)}
+                              onClick={() => solicitarEliminarEjercicio(dia, i)}
                               className="p-2 rounded-full bg-gray-700 hover:bg-red-500 transition"
                             >
                               <Trash2 size={20} className="text-red-400" />
@@ -302,7 +313,9 @@ export default function EditarRutina() {
           ))}
         </div>
 
-        {mensaje && <p className="text-sm text-red-400 mt-8 text-center">{mensaje}</p>}
+        {mensaje && (
+          <p className="text-sm text-red-400 mt-8 text-center">{mensaje}</p>
+        )}
 
         <button
           onClick={guardarCambios}
@@ -312,6 +325,7 @@ export default function EditarRutina() {
         </button>
       </div>
 
+      {/* Modal video */}
       {videoModal.abierto && (
         <div
           className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 animate-fade-in"
@@ -333,6 +347,37 @@ export default function EditarRutina() {
               className="w-full h-full rounded-3xl"
               allowFullScreen
             ></iframe>
+          </div>
+        </div>
+      )}
+
+      {/* Modal confirmación eliminar */}
+      {modalEliminar.abierto && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-80 flex flex-col justify-center items-center z-50 p-4"
+          onClick={cancelarEliminar}
+        >
+          <div
+            className="bg-gray-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-lg font-semibold text-red-400 mb-6">
+              ¿Eliminar este ejercicio?
+            </p>
+            <div className="flex justify-center gap-6">
+              <button
+                onClick={confirmarEliminarEjercicio}
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full text-lg font-bold shadow-md active:scale-95"
+              >
+                Sí, eliminar
+              </button>
+              <button
+                onClick={cancelarEliminar}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-full text-lg font-bold shadow-md active:scale-95"
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
       )}
