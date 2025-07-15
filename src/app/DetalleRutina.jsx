@@ -15,9 +15,9 @@ import {
 } from "firebase/firestore";
 
 function extraerVideoId(url) {
-  const regex = /(?:youtube\.com\/(?:watch\?v=|embed\/)\|youtu\.be\/)([^\s&?/]+)/;
+  const regex = /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^\s&?/]+)/;
   const match = url.match(regex);
-  return match ? match[1] : "";
+  return match ? match[1] : null;
 }
 
 export default function DetalleRutina() {
@@ -171,29 +171,34 @@ export default function DetalleRutina() {
                               {mostrarVideo ? "Ocultar video" : "Mostrar video"}
                             </button>
 
-                            {mostrarVideo && videoId && (
-                              <iframe
-                                width="300"
-                                height="170"
-                                src={`https://www.youtube.com/embed/${videoId}`}
-                                title="Video ejercicio"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                                className="mt-2 rounded-lg shadow-lg"
-                              ></iframe>
-                            )}
+                            {mostrarVideo && (
+  <div className="mt-2">
+    {videoId ? (
+      <iframe
+        width="300"
+        height="170"
+        src={`https://www.youtube.com/embed/${videoId}`}
+        title="Video ejercicio"
+        frameBorder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        className="rounded-lg shadow-lg"
+      ></iframe>
+    ) : (
+      <iframe
+        width="300"
+        height="170"
+        src={e.videoURL}
+        title="Video externo"
+        frameBorder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        className="rounded-lg shadow-lg"
+      ></iframe>
+    )}
+  </div>
+)}
 
-                            {!videoId && mostrarVideo && (
-                              <a
-                                href={e.videoURL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="block mt-2 text-sm text-blue-400 underline"
-                              >
-                                Ver video externo 📹
-                              </a>
-                            )}
                           </>
                         )}
                       </div>
