@@ -128,7 +128,7 @@ export default function DetalleRutina() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white px-4 py-8 flex flex-col items-center">
       <div className="w-full max-w-4xl bg-gray-900 bg-opacity-80 backdrop-blur-md rounded-3xl p-6 sm:p-10 shadow-2xl border border-gray-700">
-        
+
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-emerald-400 hover:text-emerald-500 transition font-semibold mb-4"
@@ -172,32 +172,32 @@ export default function DetalleRutina() {
                             </button>
 
                             {mostrarVideo && (
-  <div className="mt-2">
-    {videoId ? (
-      <iframe
-        width="300"
-        height="170"
-        src={`https://www.youtube.com/embed/${videoId}`}
-        title="Video ejercicio"
-        frameBorder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        className="rounded-lg shadow-lg"
-      ></iframe>
-    ) : (
-      <iframe
-        width="300"
-        height="170"
-        src={e.videoURL}
-        title="Video externo"
-        frameBorder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        className="rounded-lg shadow-lg"
-      ></iframe>
-    )}
-  </div>
-)}
+                              <div className="mt-2">
+                                {videoId ? (
+                                  <iframe
+                                    width="300"
+                                    height="170"
+                                    src={`https://www.youtube.com/embed/${videoId}`}
+                                    title="Video ejercicio"
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                    className="rounded-lg shadow-lg"
+                                  ></iframe>
+                                ) : (
+                                  <iframe
+                                    width="300"
+                                    height="170"
+                                    src={e.videoURL}
+                                    title="Video externo"
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                    className="rounded-lg shadow-lg"
+                                  ></iframe>
+                                )}
+                              </div>
+                            )}
 
                           </>
                         )}

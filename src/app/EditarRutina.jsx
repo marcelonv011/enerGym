@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db, auth } from "../firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { PlayCircle, Edit2, Trash2 } from "lucide-react"; // Íconos modernos (lucide-react)
+import { PlayCircle, Edit2, Trash2 } from "lucide-react";
 
 export default function EditarRutina() {
   const { id } = useParams();
@@ -32,6 +32,17 @@ export default function EditarRutina() {
 
   const ordenDias = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
 
+  // Función para validar URL (acepta cualquier URL válida)
+  function esUrlValida(url) {
+    if (!url) return true; // vacío = válido (opcional)
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   useEffect(() => {
     const cargarRutina = async () => {
       const uid = auth.currentUser?.uid;
@@ -60,6 +71,11 @@ export default function EditarRutina() {
   const agregarEjercicio = () => {
     if (!nuevoEjercicio.trim()) return;
 
+    if (!esUrlValida(videoURL.trim())) {
+      setMensaje("❌ URL de video inválida.");
+      return;
+    }
+
     setDias((prev) => ({
       ...prev,
       [diaSeleccionado]: [
@@ -73,6 +89,7 @@ export default function EditarRutina() {
 
     setNuevoEjercicio("");
     setVideoURL("");
+    setMensaje("");
   };
 
   const eliminarEjercicio = (dia, index) => {
@@ -92,6 +109,11 @@ export default function EditarRutina() {
     const { dia, index } = editando;
     if (editNombre.trim() === "") return;
 
+    if (!esUrlValida(editVideo.trim())) {
+      setMensaje("❌ URL de video inválida.");
+      return;
+    }
+
     setDias((prev) => {
       const nuevos = [...prev[dia]];
       nuevos[index] = {
@@ -104,6 +126,7 @@ export default function EditarRutina() {
     setEditando({ dia: null, index: null });
     setEditNombre("");
     setEditVideo("");
+    setMensaje("");
   };
 
   const abrirVideo = (url) => {
@@ -225,16 +248,23 @@ export default function EditarRutina() {
                             type="text"
                             value={editNombre}
                             onChange={(ev) => setEditNombre(ev.target.value)}
+                            placeholder="Nombre del ejercicio"
                             className="p-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                           />
                           <input
                             type="text"
                             value={editVideo}
                             onChange={(ev) => setEditVideo(ev.target.value)}
+                            placeholder="URL del video (YouTube u otro)"
                             className="p-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                           />
                           <div className="flex justify-end gap-2 mt-2">
-                            <button onClick={guardarEdicion} className="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-full font-semibold text-white transition">💾</button>
+                            <button
+                              onClick={guardarEdicion}
+                              className="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-full font-semibold text-white transition"
+                            >
+                              💾
+                            </button>
                           </div>
                         </>
                       ) : (
